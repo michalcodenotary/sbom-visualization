@@ -1,30 +1,25 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // DOM Elements
+    // --- DOM Elements ---
     const fileInput = document.getElementById('sbom-file-input');
     const clearBtn = document.getElementById('clear-btn');
     const graphContainer = document.getElementById('graph-container');
-    const statusMessage = document.getElementById('status-message');
+    const statusContainer = document.getElementById('status-container');
     const exampleButtonsContainer = document.getElementById('example-buttons-container');
 
-    // Graph State
-    const nodes = new vis.DataSet();
-    const edges = new vis.DataSet();
-    let dependencyMap = {}; // Tracks all dependencies: { "ref": ["dependsOn", ...] }
-    let componentOrigins = {}; // Tracks the root components from metadata
-
-    // vis-network setup
-    const graphData = { nodes, edges };
-    const options = {
-        layout: { hierarchical: { enabled: true, direction: 'UD', sortMethod: 'directed', nodeSpacing: 150, treeSpacing: 200,}, },
-        nodes: { shape: 'box', font: { size: 14 }, borderWidth: 2, color: { border: '#3498db', background: '#d2e9fc', highlight: { border: '#2980b9', background: '#eaf4fd' }, }, },
-        edges: { smooth: true, arrows: { to: { enabled: true, scaleFactor: 1 } }, },
+    // --- Graph State ---
+    let nodes = new vis.DataSet();
+    let edges = new vis.DataSet();
+    let dependencyMap = {};
+    let componentOrigins = {};
+    const network = new vis.Network(graphContainer, { nodes, edges }, {
+        layout: { hierarchical: { enabled: true, direction: 'UD', sortMethod: 'directed' } },
+        nodes: { shape: 'box' },
+        edges: { smooth: true, arrows: { to: { enabled: true, scaleFactor: 1 } } },
         groups: {
-            dangling: { color: { border: '#95a5a6', background: '#ecf0f1' }, shape: 'ellipse',},
-            root: { color: { border: '#27ae60', background: '#d5f5e3' }, }
-        },
-        physics: { enabled: false,},
-    };
-    const network = new vis.Network(graphContainer, graphData, options);
+            dangling: { color: { border: '#95a5a6', background: '#ecf0f1' }, shape: 'ellipse' },
+            root: { color: { border: '#27ae60', background: '#d5f5e3' } }
+        }
+    });
 
     // --- Initialization ---
     loadExampleManifest();
@@ -32,66 +27,107 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Handlers ---
     fileInput.addEventListener('change', (event) => {
         const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const sbom = JSON.parse(e.target.result);
-                    processSbom(sbom, file.name);
-                } catch (err) {
-                    statusMessage.textContent = `Error parsing ${file.name}. Is it a valid JSON?`;
-                }
-            };
-            reader.readAsText(file);
-        }
-        fileInput.value = ''; // Reset input
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const sbom = JSON.parse(e.target.result);
+                processSbom(sbom, file.name);
+            } catch (err) {
+                showError(`Error parsing ${file.name}. Not a valid JSON file.`);
+            }
+        };
+        reader.readAsText(file);
+        fileInput.value = '';
     });
-
-    async function handleExampleClick(event) {
-        const filename = event.target.dataset.exampleFile;
-        const path = `./examples/${filename}`;
-        try {
-            const response = await fetch(path);
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const sbom = await response.json();
-            processSbom(sbom, filename);
-        } catch (err) {
-            statusMessage.textContent = `Error loading example ${filename}.`;
-            console.error(err);
-        }
-    }
 
     clearBtn.addEventListener('click', () => {
         nodes.clear();
         edges.clear();
         dependencyMap = {};
         componentOrigins = {};
-        statusMessage.textContent = 'Graph cleared.';
+        clearStatus();
     });
 
-    // --- Dynamic Loading ---
+    // --- Dynamic Example Loading ---
     async function loadExampleManifest() {
         try {
             const response = await fetch('./examples/manifest.json');
             if (!response.ok) throw new Error('manifest.json not found.');
             const manifest = await response.json();
 
-            manifest.examples.forEach(example => {
+            for (const example of manifest.examples) {
+                const buttonContainer = document.createElement('div');
+                buttonContainer.className = 'tooltip';
+
                 const button = document.createElement('button');
                 button.textContent = example.name;
-                button.dataset.exampleFile = example.file;
-                button.addEventListener('click', handleExampleClick);
-                exampleButtonsContainer.appendChild(button);
-            });
+                button.onclick = async () => {
+                    try {
+                        const res = await fetch(`./examples/${example.file}`);
+                        const sbom = await res.json();
+                        processSbom(sbom, example.file);
+                    } catch (err) {
+                        showError(`Could not load or parse ${example.file}.`);
+                    }
+                };
 
+                const tooltipText = document.createElement('span');
+                tooltipText.className = 'tooltip-text';
+                const pre = document.createElement('pre');
+                pre.textContent = 'Loading...';
+                tooltipText.appendChild(pre);
+
+                buttonContainer.appendChild(button);
+                buttonContainer.appendChild(tooltipText);
+                exampleButtonsContainer.appendChild(buttonContainer);
+
+                // Pre-fetch content for tooltip on hover
+                buttonContainer.addEventListener('mouseenter', async () => {
+                    if (pre.textContent === 'Loading...') {
+                        try {
+                            const res = await fetch(`./examples/${example.file}`);
+                            const text = await res.text();
+                            pre.textContent = text;
+                        } catch {
+                            pre.textContent = 'Could not load content.';
+                        }
+                    }
+                }, { once: true }); // Only fetch once
+            }
         } catch (error) {
-            console.error("Could not load example manifest:", error);
-            statusMessage.textContent = 'Could not load examples.';
+            showError("Could not load example manifest. Make sure /examples/manifest.json exists.");
         }
     }
 
-    // --- Core Logic ---
+    // --- UI Feedback ---
+    function showStatus(message) { statusContainer.innerHTML = `<div class="status-message status-success">${message}</div>`; }
+    function showError(message) { statusContainer.innerHTML = `<div class="status-message status-error">${message}</div>`; }
+    function clearStatus() { statusContainer.innerHTML = ''; }
+
+    // --- Core Processing Logic ---
     function processSbom(sbom, sourceName) {
+        // 1. Create a temporary, future state of the dependency map
+        const tempDependencyMap = JSON.parse(JSON.stringify(dependencyMap)); // Deep clone
+        if (sbom.dependencies) {
+            const fileDeps = {};
+            sbom.dependencies.forEach(dep => {
+                if (!fileDeps[dep.ref]) fileDeps[dep.ref] = [];
+                fileDeps[dep.ref].push(...(dep.dependsOn || []));
+            });
+            Object.assign(tempDependencyMap, fileDeps); // Overwrite with new dependencies
+        }
+
+        // 2. Validate the future state for circular dependencies
+        if (hasCycle(tempDependencyMap)) {
+            showError(`Error: Loading '${sourceName}' would create a circular dependency. Operation cancelled.`);
+            return; // ABORT!
+        }
+
+        // 3. If validation passes, commit the changes to the actual state
+        dependencyMap = tempDependencyMap;
+
+        // 4. Add new nodes to the graph
         const newNodes = [];
         if (sbom.metadata && sbom.metadata.component) {
             const rootPurl = sbom.metadata.component.purl;
@@ -103,22 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         nodes.update(newNodes);
 
-        if (sbom.dependencies) {
-            const fileDependencyMap = {};
-            sbom.dependencies.forEach(dep => {
-                if (!fileDependencyMap[dep.ref]) fileDependencyMap[dep.ref] = [];
-                fileDependencyMap[dep.ref].push(...(dep.dependsOn || []));
-            });
-            Object.assign(dependencyMap, fileDependencyMap);
-        }
-
-        if (hasCycle(dependencyMap)) {
-            statusMessage.textContent = "Error: Circular dependency detected! Graph update cancelled.";
-            return;
-        }
-
+        // 5. Rebuild the entire graph from the new state
         rebuildGraph();
-        statusMessage.textContent = `Processed ${sourceName}.`;
+        showStatus(`Successfully processed ${sourceName}.`);
     }
 
     function rebuildGraph() {
@@ -131,30 +154,29 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const ref in dependencyMap) {
             dependencyMap[ref].forEach(dep => newEdges.push({ from: ref, to: dep }));
         }
-        edges.add(newEdges);
+        edges.update(newEdges);
 
+        // Identify and style dangling nodes
         const allNodeIds = nodes.getIds();
         const updatedNodes = [];
         allNodeIds.forEach(nodeId => {
             const isDependedOn = allDependencies.has(nodeId);
             const hasDependencies = dependencyMap[nodeId] && dependencyMap[nodeId].length > 0;
             const isRoot = componentOrigins[nodeId];
+            const currentNode = nodes.get(nodeId);
 
             if (!isRoot && !isDependedOn && !hasDependencies) {
                 updatedNodes.push({ id: nodeId, group: 'dangling' });
-            } else {
-                const currentNode = nodes.get(nodeId);
-                if(currentNode.group === 'dangling') {
-                    updatedNodes.push({ id: nodeId, group: isRoot ? 'root' : null });
-                }
+            } else if (currentNode && currentNode.group === 'dangling') {
+                updatedNodes.push({ id: nodeId, group: isRoot ? 'root' : null });
             }
         });
-
         if(updatedNodes.length > 0) nodes.update(updatedNodes);
     }
 
     function hasCycle(graph) {
-        const visited = new Set(), recursionStack = new Set();
+        const visited = new Set();
+        const recursionStack = new Set();
         function detect(node) {
             visited.add(node);
             recursionStack.add(node);

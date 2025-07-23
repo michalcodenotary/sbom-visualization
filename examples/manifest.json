@@ -1,0 +1,20 @@
+{
+  "examples": [
+    {
+      "name": "1. Bank App",
+      "file": "BankApp.json"
+    },
+    {
+      "name": "2. Broker App",
+      "file": "BrokerApp.json"
+    },
+    {
+      "name": "3. Chat App",
+      "file": "ChatApp.json"
+    },
+    {
+      "name": "4. Fileshare (introduces circular dependency)",
+      "file": "FileShareService.json"
+    }
+  ]
+}
