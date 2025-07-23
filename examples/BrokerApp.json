@@ -1,0 +1,26 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "metadata": {
+    "component": {
+      "purl": "BrokerApp@v1.0.0",
+      "bom-ref": "BrokerApp@v1.0.0"
+    }
+  },
+  "components": [{
+      "purl": "SafeDataBase@v1.0.0",
+      "type": "application",
+      "bom-ref": "SafeDataBase@v1.0.0"
+    },{
+      "purl": "FileSystemStorageLibrary@v1.0.0",
+      "type": "application",
+      "bom-ref": "FileSystemStorageLibrary@v1.0.0"
+    }
+  ],
+  "dependencies": [{
+      "ref": "BrokerApp@v1.0.0",
+      "dependsOn": ["SafeDataBase@v1.0.0"]
+    }, {
+      "ref": "SafeDataBase@v1.0.0",
+      "dependsOn": ["FileSystemStorageLibrary@v1.0.0"]
+    }]}

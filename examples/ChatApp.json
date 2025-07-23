@@ -1,0 +1,22 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "metadata": {
+    "component": {
+      "purl": "ChatProApp@v1.0.0",
+      "bom-ref": "ChatProApp@v1.0.0"
+    }
+  },
+  "components": [
+    {
+      "purl": "FileShareService@v1.0.0",
+      "type": "application",
+      "bom-ref": "FileShareService@v1.0.0"
+    }],
+  "dependencies": [
+    {
+      "ref": "ChatProApp@v1.0.0",
+      "dependsOn": [
+        "FileShareService@v1.0.0"
+      ]
+    }]}
