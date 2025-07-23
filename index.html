@@ -20,13 +20,21 @@
 
 <div id="examples-container">
     <h3>Load Examples</h3>
-    <div id="example-buttons-container">
-        <!-- Example buttons will be injected here -->
-    </div>
+    <!-- Example buttons will be injected here -->
+    <div id="example-buttons-container"></div>
 </div>
 
 <div id="status-container"></div>
 <div id="graph-container"></div>
+
+<!-- Modal for displaying file content -->
+<div id="file-viewer-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content">
+        <span id="close-modal-btn" class="close-btn">×</span>
+        <h2 id="modal-title">File Content</h2>
+        <pre id="file-content-pre"></pre>
+    </div>
+</div>
 
 <script src="app.js"></script>
 </body>

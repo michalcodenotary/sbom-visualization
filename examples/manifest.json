@@ -9,11 +9,15 @@
       "file": "BrokerApp.json"
     },
     {
-      "name": "3. Chat App",
+      "name": "3. Safe database",
+      "file": "SafeDatabase.json"
+    },
+    {
+      "name": "4. Chat App",
       "file": "ChatApp.json"
     },
     {
-      "name": "4. Fileshare (introduces circular dependency)",
+      "name": "5. Fileshare (introduces circular dependency)",
       "file": "FileShareService.json"
     }
   ]

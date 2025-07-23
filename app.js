@@ -5,8 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const graphContainer = document.getElementById('graph-container');
     const statusContainer = document.getElementById('status-container');
     const exampleButtonsContainer = document.getElementById('example-buttons-container');
+    const modal = document.getElementById('file-viewer-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const fileContentPre = document.getElementById('file-content-pre');
 
-    // --- Graph State ---
+    // --- Graph State & Setup ---
     let nodes = new vis.DataSet();
     let edges = new vis.DataSet();
     let dependencyMap = {};
@@ -33,20 +37,22 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const sbom = JSON.parse(e.target.result);
                 processSbom(sbom, file.name);
-            } catch (err) {
-                showError(`Error parsing ${file.name}. Not a valid JSON file.`);
-            }
+            } catch (err) { showError(`Error parsing ${file.name}. Not a valid JSON file.`); }
         };
         reader.readAsText(file);
         fileInput.value = '';
     });
 
     clearBtn.addEventListener('click', () => {
-        nodes.clear();
-        edges.clear();
-        dependencyMap = {};
-        componentOrigins = {};
+        nodes.clear(); edges.clear();
+        dependencyMap = {}; componentOrigins = {};
         clearStatus();
+    });
+
+    // Modal close events
+    closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) modal.style.display = 'none';
     });
 
     // --- Dynamic Example Loading ---
@@ -57,77 +63,68 @@ document.addEventListener('DOMContentLoaded', () => {
             const manifest = await response.json();
 
             for (const example of manifest.examples) {
-                const buttonContainer = document.createElement('div');
-                buttonContainer.className = 'tooltip';
+                const itemContainer = document.createElement('div');
+                itemContainer.className = 'example-item';
 
-                const button = document.createElement('button');
-                button.textContent = example.name;
-                button.onclick = async () => {
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = example.name;
+
+                const viewBtn = document.createElement('a');
+                viewBtn.textContent = 'View';
+                viewBtn.className = 'button view-btn';
+                viewBtn.href = '#';
+                viewBtn.onclick = async (e) => {
+                    e.preventDefault();
+                    try {
+                        const res = await fetch(`./examples/${example.file}`);
+                        const text = await res.text();
+                        modalTitle.textContent = `Content of ${example.file}`;
+                        fileContentPre.textContent = text;
+                        modal.style.display = 'flex';
+                    } catch { showError(`Could not load content for ${example.file}.`); }
+                };
+
+                const loadBtn = document.createElement('button');
+                loadBtn.textContent = 'Load';
+                loadBtn.onclick = async () => {
                     try {
                         const res = await fetch(`./examples/${example.file}`);
                         const sbom = await res.json();
                         processSbom(sbom, example.file);
-                    } catch (err) {
-                        showError(`Could not load or parse ${example.file}.`);
-                    }
+                    } catch (err) { showError(`Could not load or parse ${example.file}.`); }
                 };
 
-                const tooltipText = document.createElement('span');
-                tooltipText.className = 'tooltip-text';
-                const pre = document.createElement('pre');
-                pre.textContent = 'Loading...';
-                tooltipText.appendChild(pre);
-
-                buttonContainer.appendChild(button);
-                buttonContainer.appendChild(tooltipText);
-                exampleButtonsContainer.appendChild(buttonContainer);
-
-                // Pre-fetch content for tooltip on hover
-                buttonContainer.addEventListener('mouseenter', async () => {
-                    if (pre.textContent === 'Loading...') {
-                        try {
-                            const res = await fetch(`./examples/${example.file}`);
-                            const text = await res.text();
-                            pre.textContent = text;
-                        } catch {
-                            pre.textContent = 'Could not load content.';
-                        }
-                    }
-                }, { once: true }); // Only fetch once
+                itemContainer.appendChild(nameSpan);
+                itemContainer.appendChild(viewBtn);
+                itemContainer.appendChild(loadBtn);
+                exampleButtonsContainer.appendChild(itemContainer);
             }
-        } catch (error) {
-            showError("Could not load example manifest. Make sure /examples/manifest.json exists.");
-        }
+        } catch (error) { showError("Could not load examples. Make sure /examples/manifest.json exists."); }
     }
 
-    // --- UI Feedback ---
+    // --- UI Feedback & Core Logic (Identical to previous correct version) ---
     function showStatus(message) { statusContainer.innerHTML = `<div class="status-message status-success">${message}</div>`; }
     function showError(message) { statusContainer.innerHTML = `<div class="status-message status-error">${message}</div>`; }
     function clearStatus() { statusContainer.innerHTML = ''; }
 
-    // --- Core Processing Logic ---
     function processSbom(sbom, sourceName) {
-        // 1. Create a temporary, future state of the dependency map
-        const tempDependencyMap = JSON.parse(JSON.stringify(dependencyMap)); // Deep clone
+        const tempDependencyMap = JSON.parse(JSON.stringify(dependencyMap));
         if (sbom.dependencies) {
             const fileDeps = {};
             sbom.dependencies.forEach(dep => {
                 if (!fileDeps[dep.ref]) fileDeps[dep.ref] = [];
                 fileDeps[dep.ref].push(...(dep.dependsOn || []));
             });
-            Object.assign(tempDependencyMap, fileDeps); // Overwrite with new dependencies
+            Object.assign(tempDependencyMap, fileDeps);
         }
 
-        // 2. Validate the future state for circular dependencies
         if (hasCycle(tempDependencyMap)) {
             showError(`Error: Loading '${sourceName}' would create a circular dependency. Operation cancelled.`);
-            return; // ABORT!
+            return;
         }
 
-        // 3. If validation passes, commit the changes to the actual state
         dependencyMap = tempDependencyMap;
 
-        // 4. Add new nodes to the graph
         const newNodes = [];
         if (sbom.metadata && sbom.metadata.component) {
             const rootPurl = sbom.metadata.component.purl;
@@ -139,7 +136,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         nodes.update(newNodes);
 
-        // 5. Rebuild the entire graph from the new state
         rebuildGraph();
         showStatus(`Successfully processed ${sourceName}.`);
     }
@@ -147,16 +143,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function rebuildGraph() {
         edges.clear();
 
-        const newEdges = [];
-        const allDependencies = new Set();
+        const newEdges = [], allDependencies = new Set();
         Object.values(dependencyMap).forEach(deps => deps.forEach(dep => allDependencies.add(dep)));
-
         for (const ref in dependencyMap) {
             dependencyMap[ref].forEach(dep => newEdges.push({ from: ref, to: dep }));
         }
         edges.update(newEdges);
 
-        // Identify and style dangling nodes
         const allNodeIds = nodes.getIds();
         const updatedNodes = [];
         allNodeIds.forEach(nodeId => {
@@ -175,8 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function hasCycle(graph) {
-        const visited = new Set();
-        const recursionStack = new Set();
+        const visited = new Set(), recursionStack = new Set();
         function detect(node) {
             visited.add(node);
             recursionStack.add(node);
@@ -184,9 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
             for (const neighbor of neighbors) {
                 if (!visited.has(neighbor)) {
                     if (detect(neighbor)) return true;
-                } else if (recursionStack.has(neighbor)) {
-                    return true;
-                }
+                } else if (recursionStack.has(neighbor)) { return true; }
             }
             recursionStack.delete(node);
             return false;
