@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBOM Graph Visualizer</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+</head>
+<body>
+<h1>SBOM Dependency Graph Visualizer</h1>
+
+<div class="controls">
+    <div class="file-loader">
+        <label for="sbom-file-input">Load SBOM File:</label>
+        <input type="file" id="sbom-file-input" accept=".json">
+    </div>
+    <!-- Example buttons will be injected here by app.js -->
+    <div class="example-loader">
+        <span>Load Examples:</span>
+        <div id="example-buttons-container"></div>
+    </div>
+    <button id="clear-btn">Clear Graph</button>
+</div>
+
+<div id="status-message"></div>
+<div id="graph-container"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

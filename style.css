@@ -1,0 +1,79 @@
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f7f7f7;
+    color: #333;
+}
+
+h1 {
+    text-align: center;
+    color: #2c3e50;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.file-loader, .example-loader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Container for the dynamically generated buttons */
+#example-buttons-container {
+    display: flex;
+    gap: 10px;
+}
+
+button, input[type="file"] {
+    font-size: 14px;
+}
+
+button {
+    padding: 8px 16px;
+    border: none;
+    background-color: #3498db;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+#clear-btn {
+    background-color: #e74c3c;
+}
+
+#clear-btn:hover {
+    background-color: #c0392b;
+}
+
+#status-message {
+    text-align: center;
+    min-height: 20px;
+    color: #c0392b;
+    font-weight: bold;
+}
+
+#graph-container {
+    width: 100%;
+    height: 70vh;
+    border: 1px solid #ddd;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
