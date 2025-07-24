@@ -8,24 +8,38 @@
     <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 </head>
 <body>
-<h1>SBOM Dependency Graph Visualizer</h1>
-
-<div class="controls">
-    <div class="file-loader">
-        <label for="sbom-file-input">Load SBOM From Disk:</label>
-        <input type="file" id="sbom-file-input" accept=".json">
+    <h1>SBOM Dependency Graph Visualizer</h1>
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="controls">
+                <div class="file-loader">
+                    <label for="sbom-file-input">Load SBOM From Disk:</label>
+                    <input type="file" id="sbom-file-input" accept=".json">
+                </div>
+                <button id="clear-btn">Clear Graph</button>
+            </div>
+            <div id="examples-container">
+                <h3>Load Examples</h3>
+                <!-- Example buttons will be injected here -->
+                <div id="example-buttons-container"></div>
+            </div>
+            <div id="status-container"></div>
+            
+            <!-- File Preview Section -->
+            <div id="file-preview-section" style="display: none;">
+                <div id="file-preview-header">
+                    <span id="file-preview-title">File Preview</span>
+                    <button id="close-preview-btn" class="close-preview-btn">×</button>
+                </div>
+                <div id="file-preview-content">
+                    <div id="file-preview-placeholder">Click "View" on any example to preview its content here</div>
+                </div>
+            </div>
+        </div>
+        <div class="content-area">
+            <div id="graph-container"></div>
+        </div>
     </div>
-    <button id="clear-btn">Clear Graph</button>
-</div>
-
-<div id="examples-container">
-    <h3>Load Examples</h3>
-    <!-- Example buttons will be injected here -->
-    <div id="example-buttons-container"></div>
-</div>
-
-<div id="status-container"></div>
-<div id="graph-container"></div>
 
 <!-- Modal for displaying file content -->
 <div id="file-viewer-modal" class="modal-overlay" style="display:none;">

@@ -9,6 +9,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitle = document.getElementById('modal-title');
     const closeModalBtn = document.getElementById('close-modal-btn');
     const fileContentPre = document.getElementById('file-content-pre');
+    
+    // File preview elements
+    const filePreviewSection = document.getElementById('file-preview-section');
+    const filePreviewTitle = document.getElementById('file-preview-title');
+    const filePreviewContent = document.getElementById('file-preview-content');
+    const closePreviewBtn = document.getElementById('close-preview-btn');
 
     // --- Graph State & Setup ---
     let nodes = new vis.DataSet();
@@ -54,6 +60,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('click', (event) => {
         if (event.target === modal) modal.style.display = 'none';
     });
+    
+    // File preview close event
+    closePreviewBtn.addEventListener('click', () => {
+        filePreviewSection.style.display = 'none';
+    });
 
     // --- Dynamic Example Loading ---
     async function loadExampleManifest() {
@@ -78,9 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     try {
                         const res = await fetch(`./examples/${example.file}`);
                         const text = await res.text();
-                        modalTitle.textContent = `Content of ${example.file}`;
-                        fileContentPre.textContent = text;
-                        modal.style.display = 'flex';
+                        showFilePreview(example.file, text);
                     } catch { showError(`Could not load content for ${example.file}.`); }
                 };
 
@@ -102,6 +111,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) { showError("Could not load examples. Make sure /examples/manifest.json exists."); }
     }
 
+    // --- File Preview Functions ---
+    function showFilePreview(filename, content) {
+        filePreviewTitle.textContent = filename;
+        filePreviewContent.textContent = content;
+        filePreviewSection.style.display = 'flex';
+    }
+    
     // --- UI Feedback & Core Logic (Identical to previous correct version) ---
     function showStatus(message) { statusContainer.innerHTML = `<div class="status-message status-success">${message}</div>`; }
     function showError(message) { statusContainer.innerHTML = `<div class="status-message status-error">${message}</div>`; }

@@ -1,15 +1,51 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    padding: 20px;
+    padding: 0;
     background-color: #f7f7f7;
     color: #333;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
 }
-h1, h3 { text-align: center; color: #2c3e50; }
+h1 { text-align: center; color: #2c3e50; padding: 10px 0; margin: 0; background-color: #fff; border-bottom: 1px solid #ddd; }
+h3 { text-align: center; color: #2c3e50; margin-top: 0; }
+
+/* Main layout container */
+.main-container {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* Left sidebar */
+.sidebar {
+    width: 33.333%;
+    min-width: 400px;
+    max-width: 500px;
+    background-color: #fff;
+    border-right: 1px solid #ddd;
+    padding: 15px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Right content area */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 10px;
+    box-sizing: border-box;
+}
 .controls, #examples-container {
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-    margin-bottom: 20px; padding: 15px; background-color: #fff;
-    border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+    margin-bottom: 20px; padding: 15px; background-color: #f9f9f9;
+    border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 #example-buttons-container { display: flex; flex-direction: column; align-items: stretch; gap: 10px; }
 
@@ -45,12 +81,82 @@ button:hover, .button:hover { background-color: #2980b9; }
 #clear-btn { background-color: #e74c3c; }
 #clear-btn:hover { background-color: #c0392b; }
 
+/* File Preview Section */
+#file-preview-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    min-height: 0;
+}
+
+#file-preview-header {
+    background-color: #f9f9f9;
+    padding: 10px 15px;
+    border-radius: 8px 8px 0 0;
+    border: 1px solid #eee;
+    font-weight: bold;
+    color: #2c3e50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#file-preview-content {
+    flex: 1;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 15px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-y: auto;
+    min-height: 200px;
+    color: #333;
+}
+
+#file-preview-placeholder {
+    color: #7f8c8d;
+    font-style: italic;
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.close-preview-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    color: #7f8c8d;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-preview-btn:hover {
+    color: #e74c3c;
+    background-color: transparent;
+}
+
 /* Status & Graph & Modal Styles (Unchanged) */
 #status-container { text-align: center; padding: 10px; min-height: 24px; }
 .status-message { padding: 10px; border-radius: 5px; margin: 0 auto; display: inline-block; }
 .status-success { background-color: #dff0d8; color: #3c763d; }
 .status-error { background-color: #f2dede; color: #a94442; }
-#graph-container { width: 100%; height: 70vh; border: 1px solid #ddd; background-color: #fff; }
+#graph-container { 
+    width: 100%; 
+    height: 100%; 
+    border: 1px solid #ddd; 
+    background-color: #fff; 
+    box-sizing: border-box;
+}
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; display: flex; justify-content: center; align-items: center; }
 .modal-content { background-color: #fff; padding: 20px; border-radius: 8px; width: 80%; max-width: 800px; max-height: 80vh; overflow-y: auto; position: relative; }
 .close-btn { position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; cursor: pointer; }
