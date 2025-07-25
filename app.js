@@ -100,7 +100,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         const res = await fetch(`./examples/${example.file}`);
                         const sbom = await res.json();
                         processSbom(sbom, example.file);
-                    } catch (err) { showError(`Could not load or parse ${example.file}.`); }
+                    } catch (err) { 
+                        console.error(`Error loading ${example.file}:`, err);
+                        showError(`Could not load or parse ${example.file}. Error: ${err.message}`); 
+                    }
                 };
 
                 itemContainer.appendChild(nameSpan);
@@ -123,38 +126,60 @@ document.addEventListener('DOMContentLoaded', () => {
     function showError(message) { statusContainer.innerHTML = `<div class="status-message status-error">${message}</div>`; }
     function clearStatus() { statusContainer.innerHTML = ''; }
 
-    function processSbom(sbom, sourceName) {
-        const tempDependencyMap = JSON.parse(JSON.stringify(dependencyMap));
-        if (sbom.dependencies) {
-            const fileDeps = {};
-            sbom.dependencies.forEach(dep => {
-                if (!fileDeps[dep.ref]) fileDeps[dep.ref] = [];
-                fileDeps[dep.ref].push(...(dep.dependsOn || []));
-            });
-            Object.assign(tempDependencyMap, fileDeps);
-        }
-
-        if (hasCycle(tempDependencyMap)) {
-            showError(`Error: Loading '${sourceName}' would create a circular dependency. Operation cancelled.`);
-            return;
-        }
-
-        dependencyMap = tempDependencyMap;
-
-        const newNodes = [];
-        if (sbom.metadata && sbom.metadata.component) {
-            const rootPurl = sbom.metadata.component.purl;
-            newNodes.push({ id: rootPurl, label: rootPurl.split('@')[0], group: 'root' });
-            componentOrigins[rootPurl] = true;
-        }
-        if (sbom.components) {
-            sbom.components.forEach(c => newNodes.push({ id: c.purl, label: c.purl.split('@')[0] }));
-        }
-        nodes.update(newNodes);
-
-        rebuildGraph();
-        showStatus(`Successfully processed ${sourceName}.`);
+function processSbom(sbom, sourceName) {
+    // Collect all components mentioned in this file (both root component and listed components)
+    const allFileComponents = new Set();
+    
+    if (sbom.metadata && sbom.metadata.component) {
+        allFileComponents.add(sbom.metadata.component.purl);
     }
+    if (sbom.components) {
+        sbom.components.forEach(c => allFileComponents.add(c.purl));
+    }
+    
+    if (sbom.dependencies) {
+        const fileDeps = {};
+        sbom.dependencies.forEach(dep => {
+            if (!fileDeps[dep.ref]) fileDeps[dep.ref] = [];
+            fileDeps[dep.ref].push(...(dep.dependsOn || []));
+        });
+        
+        // Check for self-referential cycles within this file only
+        for (const componentRef in fileDeps) {
+            if (hasPathToSelf(componentRef, fileDeps, new Set())) {
+                showError(`Error: '${sourceName}' contains a self-referential dependency for '${componentRef}'. Operation cancelled.`);
+                return;
+            }
+        }
+        
+        // Clear dependencies for ALL components mentioned in this file
+        allFileComponents.forEach(component => {
+            delete dependencyMap[component];
+        });
+        
+        // Set new dependencies only for components that have them defined
+        Object.assign(dependencyMap, fileDeps);
+    } else {
+        // If no dependencies section, clear all dependencies for mentioned components
+        allFileComponents.forEach(component => {
+            delete dependencyMap[component];
+        });
+    }
+
+    const newNodes = [];
+    if (sbom.metadata && sbom.metadata.component) {
+        const rootPurl = sbom.metadata.component.purl;
+        newNodes.push({ id: rootPurl, label: rootPurl.split('@')[0], group: 'root' });
+        componentOrigins[rootPurl] = true;
+    }
+    if (sbom.components) {
+        sbom.components.forEach(c => newNodes.push({ id: c.purl, label: c.purl.split('@')[0] }));
+    }
+    nodes.update(newNodes);
+
+    rebuildGraph();
+    showStatus(`Successfully processed ${sourceName}.`);
+}
 
     function rebuildGraph() {
         edges.clear();
@@ -177,10 +202,34 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isRoot && !isDependedOn && !hasDependencies) {
                 updatedNodes.push({ id: nodeId, group: 'dangling' });
             } else if (currentNode && currentNode.group === 'dangling') {
-                updatedNodes.push({ id: nodeId, group: isRoot ? 'root' : null });
+                // Remove the group property entirely instead of setting to null
+                const nodeUpdate = { id: nodeId };
+                if (isRoot) {
+                    nodeUpdate.group = 'root';
+                }
+                updatedNodes.push(nodeUpdate);
             }
         });
         if(updatedNodes.length > 0) nodes.update(updatedNodes);
+    }
+
+    // Check if a component has a path back to itself within the same file
+    function hasPathToSelf(startNode, fileDeps, visited) {
+        if (visited.has(startNode)) return true; // Found a cycle back to start
+        
+        visited.add(startNode);
+        const dependencies = fileDeps[startNode] || [];
+        
+        for (const dep of dependencies) {
+            // Only check dependencies that are defined in this same file
+            if (fileDeps.hasOwnProperty(dep)) {
+                if (dep === startNode || hasPathToSelf(dep, fileDeps, new Set(visited))) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
     }
 
     function hasCycle(graph) {

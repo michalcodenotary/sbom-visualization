@@ -17,8 +17,12 @@
       "file": "ChatApp.json"
     },
     {
-      "name": "5. Fileshare (introduces circular dependency)",
+      "name": "5. Fileshare",
       "file": "FileShareService.json"
+    },
+    {
+      "name": "6. Cycle",
+      "file": "Cycle.json"
     }
   ]
 }

@@ -21,8 +21,5 @@
   "dependencies": [
     {
       "ref": "SafeDataBase@v1.0.0",
-      "dependsOn": ["FileSystemStorageLibrary@v1.0.0"]
-    },{
-      "ref": "SafeDataBase@v1.0.0",
-      "dependsOn": ["RamStorageLibrary@v1.0.0"]
+      "dependsOn": ["FileSystemStorageLibrary@v1.0.0", "RamStorageLibrary@v1.0.0"]
     }]}
