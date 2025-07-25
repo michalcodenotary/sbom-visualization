@@ -23,16 +23,34 @@
                 <!-- Example buttons will be injected here -->
                 <div id="example-buttons-container"></div>
             </div>
-            <div id="status-container"></div>
             
-            <!-- File Preview Section -->
-            <div id="file-preview-section" style="display: none;">
+            <!-- Legend Section -->
+            <div id="legend-container">
+                <h3>Legend</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="legend-color legend-green"></div>
+                        <span>Internal SBOMs</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color legend-blue"></div>
+                        <span>Artifacts</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="status-container"></div>
+        </div>
+        
+        <!-- File Preview Popup Overlay for Sidebar -->
+        <div id="file-preview-popup" class="file-preview-overlay" style="display: none;">
+            <div class="file-preview-popup-content">
                 <div id="file-preview-header">
                     <span id="file-preview-title">File Preview</span>
                     <button id="close-preview-btn" class="close-preview-btn">×</button>
                 </div>
                 <div id="file-preview-content">
-                    <div id="file-preview-placeholder">Click "View" on any example to preview its content here</div>
+                    <div id="file-preview-placeholder">Loading file content...</div>
                 </div>
             </div>
         </div>

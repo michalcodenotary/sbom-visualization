@@ -10,8 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModalBtn = document.getElementById('close-modal-btn');
     const fileContentPre = document.getElementById('file-content-pre');
     
-    // File preview elements
-    const filePreviewSection = document.getElementById('file-preview-section');
+    // File preview elements (popup)
+    const filePreviewPopup = document.getElementById('file-preview-popup');
     const filePreviewTitle = document.getElementById('file-preview-title');
     const filePreviewContent = document.getElementById('file-preview-content');
     const closePreviewBtn = document.getElementById('close-preview-btn');
@@ -60,9 +60,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (event.target === modal) modal.style.display = 'none';
     });
     
-    // File preview close event
+    // File preview close events
     closePreviewBtn.addEventListener('click', () => {
-        filePreviewSection.style.display = 'none';
+        filePreviewPopup.style.display = 'none';
+    });
+    
+    // Close preview when clicking outside the popup content
+    filePreviewPopup.addEventListener('click', (event) => {
+        if (event.target === filePreviewPopup) {
+            filePreviewPopup.style.display = 'none';
+        }
     });
 
     // --- Dynamic Example Loading ---
@@ -117,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showFilePreview(filename, content) {
         filePreviewTitle.textContent = filename;
         filePreviewContent.textContent = content;
-        filePreviewSection.style.display = 'flex';
+        filePreviewPopup.style.display = 'flex';
     }
     
     // --- UI Feedback & Core Logic (Identical to previous correct version) ---

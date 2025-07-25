@@ -81,6 +81,121 @@ button:hover, .button:hover { background-color: #2980b9; }
 #clear-btn { background-color: #e74c3c; }
 #clear-btn:hover { background-color: #c0392b; }
 
+/* Legend Section */
+#legend-container {
+    display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+    margin-bottom: 20px; padding: 15px; background-color: #f9f9f9;
+    border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 3px;
+    border: 2px solid;
+}
+
+.legend-green {
+    background-color: #d5f5e3;
+    border-color: #27ae60;
+}
+
+.legend-blue {
+    background-color: #ddeeff;
+    border-color: #3498db;
+}
+
+.legend-item span {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+/* File Preview Popup Overlay */
+.file-preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 33.333%;
+    min-width: 400px;
+    max-width: 500px;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: flex;
+    padding: 15px;
+    box-sizing: border-box;
+}
+
+.file-preview-popup-content {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    width: 100%;
+    max-height: 90%;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    margin: auto 0;
+}
+
+.file-preview-overlay #file-preview-header {
+    background-color: #f9f9f9;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 1px solid #eee;
+    font-weight: bold;
+    color: #2c3e50;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-preview-overlay #file-preview-content {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 0 0 8px 8px;
+    padding: 20px;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-y: auto;
+    color: #333;
+}
+
+.file-preview-overlay .close-preview-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #7f8c8d;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.file-preview-overlay .close-preview-btn:hover {
+    color: #e74c3c;
+    background-color: #f8f9fa;
+}
+
 /* File Preview Section */
 #file-preview-section {
     flex: 1;
