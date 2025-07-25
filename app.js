@@ -26,7 +26,6 @@ document.addEventListener('DOMContentLoaded', () => {
         nodes: { shape: 'box' },
         edges: { smooth: true, arrows: { to: { enabled: true, scaleFactor: 1 } } },
         groups: {
-            dangling: { color: { border: '#95a5a6', background: '#ecf0f1' }, shape: 'ellipse' },
             root: { color: { border: '#27ae60', background: '#d5f5e3' } }
         }
     });
@@ -185,10 +184,12 @@ function processSbom(sbom, sourceName) {
         edges.clear();
 
         const newEdges = [], allDependencies = new Set();
-        Object.values(dependencyMap).forEach(deps => deps.forEach(dep => allDependencies.add(dep)));
-        for (const ref in dependencyMap) {
-            dependencyMap[ref].forEach(dep => newEdges.push({ from: ref, to: dep }));
-        }
+        Object.entries(dependencyMap).forEach(([ref, deps]) => {
+            deps.forEach(dep => {
+                allDependencies.add(dep);
+                newEdges.push({ from: ref, to: dep });
+            });
+        });
         edges.update(newEdges);
 
         const allNodeIds = nodes.getIds();
@@ -198,15 +199,24 @@ function processSbom(sbom, sourceName) {
             const hasDependencies = dependencyMap[nodeId] && dependencyMap[nodeId].length > 0;
             const isRoot = componentOrigins[nodeId];
             const currentNode = nodes.get(nodeId);
-
-            if (!isRoot && !isDependedOn && !hasDependencies) {
-                updatedNodes.push({ id: nodeId, group: 'dangling' });
-            } else if (currentNode && currentNode.group === 'dangling') {
-                // Remove the group property entirely instead of setting to null
+            
+            // Determine what the node's group SHOULD be
+            let targetGroup;
+            if (isRoot) {
+                targetGroup = 'root';
+            } else {
+                targetGroup = undefined; // Default styling (blue)
+            }
+            
+            // Only update if the group needs to change
+            const currentGroup = currentNode ? currentNode.group : undefined;
+            if (currentGroup !== targetGroup) {
                 const nodeUpdate = { id: nodeId };
-                if (isRoot) {
-                    nodeUpdate.group = 'root';
+                if (targetGroup) {
+                    nodeUpdate.group = targetGroup;
                 }
+                // If targetGroup is undefined, don't set group property
+                // This uses default vis.js styling
                 updatedNodes.push(nodeUpdate);
             }
         });
