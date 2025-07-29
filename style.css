@@ -11,6 +11,16 @@ body {
 h1 { text-align: center; color: #2c3e50; padding: 10px 0; margin: 0; background-color: #fff; border-bottom: 1px solid #ddd; }
 h3 { text-align: center; color: #2c3e50; margin-top: 0; }
 
+.logo-container {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 100;
+}
+.logo {
+    width: 150px;
+}
+
 /* Main layout container */
 .main-container {
     display: flex;
